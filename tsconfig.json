@@ -16,10 +16,10 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
-      "lucide-react": ["src/shims/lucide-react.tsx"],
       "next/navigation": ["src/shims/next/navigation.ts"],
       "next/image": ["src/shims/next/image.tsx"],
-      "next/server": ["src/shims/next/server.ts"]
+      "next/server": ["src/shims/next/server.ts"],
+      "next/link": ["src/shims/next/link.tsx"]
     }
   },
   "include": [

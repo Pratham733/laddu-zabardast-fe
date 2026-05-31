@@ -11,6 +11,7 @@ export default defineConfig({
       'next/navigation': path.resolve(__dirname, 'src/shims/next/navigation.ts'),
       'next/image': path.resolve(__dirname, 'src/shims/next/image.tsx'),
       'next/server': path.resolve(__dirname, 'src/shims/next/server.ts'),
+      'next/link': path.resolve(__dirname, 'src/shims/next/link.tsx'),
     },
   },
   optimizeDeps: {

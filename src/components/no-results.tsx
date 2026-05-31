@@ -1,7 +1,8 @@
 "use client";
 
-import { SearchX } from "lucene-react";
+import { SearchX } from "lucide-react";
 import { Link } from "react-router-dom";
+
 
 interface NoResultsProps {
   query: string | null;

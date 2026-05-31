@@ -1,4 +1,4 @@
-import Link from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import type { Product } from "@/types/product";
 import { Card } from "@/components/ui/card";

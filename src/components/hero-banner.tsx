@@ -98,15 +98,12 @@ export function HeroCarousel() {
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }} // Smoother easing
                     >
-                      <Image
+                      <img
                         src={item.imageUrl}
                         alt={item.imageAlt}
-                        fill={true}
-                        style={{ objectFit: "cover" }}
-                        quality={85}
-                        className="opacity-70 dark:opacity-30" // Increased light mode opacity
+                        className="absolute inset-0 w-full h-full object-cover opacity-70 dark:opacity-30"
                         data-ai-hint={item.aiHint}
-                        priority={item.id === 1} // Prioritize loading the first image
+                        loading={item.id === 1 ? "eager" : "lazy"}
                       />
                     </motion.div>
                     {/* Animated Content Wrapper */}

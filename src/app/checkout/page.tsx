@@ -26,9 +26,10 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { Loader2, Home, CreditCard, Landmark } from "lucide-react";
+
 import { useAuth } from "@/context/auth-context";
 import { useRouter, usePathname } from "next/navigation";
+import { LoaderCircle, House, CreditCard, Landmark } from "lucide-react";
 import Image from "next/image";
 
 import type { Address } from "@/types/product";
@@ -43,7 +44,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 
-import Image from "next/image";
+// import Image from "next/image"
 
 // Define form schema with Zod
 const formSchema = z.object({
@@ -297,7 +298,7 @@ export default function CheckoutPage() {
           Loading Checkout...
         </h1>
         <div className="flex justify-center items-center py-16">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -440,7 +441,7 @@ export default function CheckoutPage() {
                             className="flex items-center h-12 px-4 text-base"
                           >
                             <div className="flex items-center">
-                              <Home className="mr-2 h-4 w-4" />
+                              <House className="mr-2 h-4 w-4" />
                               Add New Address
                             </div>
                           </SelectItem>
@@ -617,7 +618,7 @@ export default function CheckoutPage() {
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />{" "}
                         Confirming Order...
                       </>
                     ) : paymentMethod === "upi" ? (

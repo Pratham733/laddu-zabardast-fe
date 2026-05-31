@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useMemo } from "react";
-import { getUserOrders, getOrderDetails } from "@/services/order";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format, parseISO, compareDesc } from "date-fns";
@@ -10,7 +9,29 @@ import { useAuth } from "@/context/auth-context";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { CheckCircle, Truck, Package, XCircle, Loader2, ChevronDown } from "lucide-react";
+import { CheckCircle, Truck, Package, XCircle, LoaderCircle, ChevronDown } from "lucide-react";
+
+const getUserOrders = async (email: string, token: string): Promise<SimplifiedOrder[]> => {
+  const response = await fetch(`/api/orders?email=${encodeURIComponent(email)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch orders");
+  }
+  const data = await response.json();
+  return data.orders || [];
+};
+
+const getOrderDetails = async (orderId: string): Promise<Order | null> => {
+  const response = await fetch(`/api/orders/${orderId}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch order details");
+  }
+  const data = await response.json();
+  return data.order || null;
+};
 
 const groupOrdersByMonth = (orders: SimplifiedOrder[]) => {
   const sortedOrders = [...orders].sort((a, b) =>
@@ -54,7 +75,7 @@ const statusProgress = (status: string) => {
 // Helper for status icon
 const statusIcon = (status: string) => {
   switch (status.toLowerCase()) {
-    case "processing": return <Loader2 className="text-yellow-500 animate-spin" size={18} />;
+    case "processing": return <LoaderCircle className="text-yellow-500 animate-spin" size={18} />;
     case "shipped": return <Truck className="text-blue-500" size={18} />;
     case "delivered": return <CheckCircle className="text-green-500" size={18} />;
     case "cancelled": return <XCircle className="text-red-500" size={18} />;
@@ -174,7 +195,7 @@ export default function OrdersPage() {
                         aria-controls={`order-details-${order.id}`}
                         className="text-xs px-3 py-1 flex items-center gap-1"
                       >
-                        {loadingDetails[order.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : (details[order.id] ? "Hide" : "Details")}
+                        {loadingDetails[order.id] ? <LoaderCircle className="h-3 w-3 animate-spin" /> : (details[order.id] ? "Hide" : "Details")}
                         {!loadingDetails[order.id] && <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${details[order.id] ? 'rotate-180' : ''}`} />}
                       </Button>
                     </CardContent>
@@ -204,7 +225,7 @@ export default function OrdersPage() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span className="inline-flex items-center gap-1.5 cursor-default text-muted-foreground dark:text-zinc-400">
-                                        Payment: {details[order.id]?.paymentStatus === 'completed' || details[order.id]?.paymentStatus === 'paid' ? <CheckCircle className="text-green-500" size={16} /> : <Loader2 className="text-yellow-500 animate-spin" size={16} />}
+                                        Payment: {details[order.id]?.paymentStatus === 'completed' || details[order.id]?.paymentStatus === 'paid' ? <CheckCircle className="text-green-500" size={16} /> : <LoaderCircle className="text-yellow-500 animate-spin" size={16} />}
                                         <span className="capitalize">{details[order.id]?.paymentStatus}</span>
                                       </span>
                                     </TooltipTrigger>

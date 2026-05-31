@@ -1,7 +1,7 @@
 // src/app/order-confirmation/page.tsx
 "use client";
 
-import Link from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Check, Download, FileText } from "lucide-react";

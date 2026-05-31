@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
-import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
+import { LogIn, Mail, Lock, LoaderCircle } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Separator } from "@/components/ui/separator";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
@@ -367,7 +367,7 @@ export default function LoginPage() {
                 >
                   <span className="flex items-center">
                     {isLoading ? (
-                      <Loader2 className="mr-2 h-3 w-3 align-middle" />
+                      <LoaderCircle className="mr-2 h-3 w-3 align-middle" />
                     ) : (
                       <LogIn className="mr-2 h-3 w-3 align-middle" />
                     )}

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "lucide-react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -25,10 +25,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
-import { UserPlus, Mail, Lock, Loader2, Chrome } from "lucide-react"; // Using Chrome for Google
+import { UserPlus, Mail, Lock, LoaderCircle } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { Separator } from "@/components/ui/separator"; // Import Separator
-import { signIn } from "next-auth/react";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { Button } from "@/components/ui/button"; // Import Button
 import { MailOpen } from "lucide-react"; // Import MailOpen icon
@@ -144,7 +142,6 @@ export default function SignupPage() {
   const searchParams = useSearchParams();
   const { setToken } = useAuth(); // Use setToken from context
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false); // State for Google Sign-Up
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -251,22 +248,7 @@ export default function SignupPage() {
     }
   };
 
-  // Handle Google Sign-Up/Sign-In
-  const handleGoogleSignUp = () => {
-    setIsGoogleLoading(true);
-    signIn("google", { callbackUrl: "/" }) // or your desired redirect URL
-      .catch((error) => {
-        console.error("Google Sign-In error:", error);
-        toast({
-          title: "Google Sign-In Failed",
-          description: "Unable to sign in with Google.",
-          variant: "destructive",
-        });
-      })
-      .finally(() => {
-        setIsGoogleLoading(false);
-      });
-  };
+
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6 md:py-20 flex justify-center items-center min-h-[70vh]">
@@ -306,7 +288,7 @@ export default function SignupPage() {
                         <Input
                           placeholder="Your first name"
                           {...field}
-                          disabled={isLoading || isGoogleLoading}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -326,7 +308,7 @@ export default function SignupPage() {
                         <Input
                           placeholder="Your last name"
                           {...field}
-                          disabled={isLoading || isGoogleLoading}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -347,7 +329,7 @@ export default function SignupPage() {
                           type="email"
                           placeholder="your.email@example.com"
                           {...field}
-                          disabled={isLoading || isGoogleLoading}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -369,7 +351,7 @@ export default function SignupPage() {
                           autoComplete="new-password"
                           placeholder="Choose a password (min 6 chars)"
                           {...field}
-                          disabled={isLoading || isGoogleLoading}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -379,11 +361,11 @@ export default function SignupPage() {
                 <InteractiveHoverButton
                   type="submit"
                   className="w-full h-8 px-3 py-1 rounded-full text-sm font-semibold flex flex-row items-center justify-center gap-2"
-                  disabled={isLoading || isGoogleLoading}
+                  disabled={isLoading}
                 >
                   <span className="flex items-center">
                     {isLoading ? (
-                      <Loader2 className="mr-2 h-3 w-3 align-middle" />
+                      <LoaderCircle className="mr-2 h-3 w-3 align-middle" />
                     ) : (
                       <UserPlus className="mr-2 h-3 w-3 align-middle" />
                     )}

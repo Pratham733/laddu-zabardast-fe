@@ -1,5 +1,10 @@
 declare module 'next/image' {
   import * as React from 'react';
-  const Image: React.FC<React.ImgHTMLAttributes<HTMLImageElement>>;
+  export interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+    priority?: boolean;
+    fill?: boolean;
+    unoptimized?: boolean;
+  }
+  const Image: React.FC<ImageProps>;
   export default Image;
 }
