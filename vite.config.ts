@@ -17,7 +17,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react-router-dom'],
   },
-  server: { open: true },
+  server: { port: 7000 },
   build: { outDir: 'dist' },
 });
 
