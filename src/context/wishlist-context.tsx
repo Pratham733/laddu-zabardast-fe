@@ -15,6 +15,8 @@ import type { Product } from "@/types/product";
 import { useAuth } from "./auth-context";
 import { usePathname } from "next/navigation";
 
+import { getWishlist, updateWishlist } from "@/routes";
+
 interface WishlistContextProps {
   wishlist: Product[];
   addToWishlist: (product: Product) => void;
@@ -49,26 +51,8 @@ export const WishlistProvider = ({
     }
 
     try {
-      const response = await fetch(`/api/wishlist/${user.userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch wishlist: ${response.status}`);
-      }
-
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        setWishlist(data.wishlist || []);
-      } catch (parseError) {
-        console.error("[WishlistContext] Invalid JSON response:", text);
-        console.error("[WishlistContext] Parse error:", parseError);
-        setWishlist([]);
-      }
+      const data = await getWishlist(user.userId, token);
+      setWishlist(data.wishlist || []);
     } catch (error) {
       console.error("[WishlistContext] Error fetching wishlist:", error);
       setWishlist([]);
@@ -102,20 +86,7 @@ export const WishlistProvider = ({
       return;
     }
 
-    fetch(`/api/wishlist/${user.userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ items: wishlist }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("[WishlistContext] PUT error:", res.status, errorText);
-        }
-      })
+    updateWishlist(user.userId, wishlist, token)
       .catch((err) => {
         console.error("[WishlistContext] PUT fetch error:", err);
       });

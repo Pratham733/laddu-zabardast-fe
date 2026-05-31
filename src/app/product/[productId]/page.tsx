@@ -8,13 +8,17 @@ import type { Review } from '@/types/review';
 import { useAuth } from '@/context/auth-context';
 import { ProductCard } from '@/components/product-card';
 import type { ChangeEvent, FormEvent } from 'react';
+import {
+  getProductReviews,
+  submitReview,
+  updateReview,
+  getProductById as fetchProductById
+} from '@/routes';
 
 const getProductById = async (id: string): Promise<Product | null> => {
   try {
-    const response = await fetch(`/api/products/${id}`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.product;
+    const data = await fetchProductById(id);
+    return data.product || data;
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
@@ -46,8 +50,7 @@ const ProductReviews: React.FC<{
   };
 
   useEffect(() => {
-    fetch(`/api/products/${productId}/reviews`)
-      .then(res => res.json())
+    getProductReviews(productId)
       .then(data => {
         setReviews(data.reviews || []);
         if (user) {
@@ -60,7 +63,8 @@ const ProductReviews: React.FC<{
             });
           }
         }
-      });
+      })
+      .catch(console.error);
   }, [productId, user]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -69,24 +73,20 @@ const ProductReviews: React.FC<{
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/products/${productId}/reviews${editing ? `/${myReview?._id}` : ''}`, {
-        method: editing ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formState)
-      });
+      const data = editing && myReview?._id
+        ? await updateReview(productId, myReview._id, formState)
+        : await submitReview(productId, formState);
 
-      if (response.ok) {
-        const { review } = await response.json();
-        if (editing) {
-          setReviews(reviews.map(r => r._id === review._id ? review : r));
-          setMyReview(review);
-        } else {
-          setReviews([...reviews, review]);
-          setMyReview(review);
-        }
-        setEditing(false);
-        setFormState({ rating: 0, comment: '' });
+      const review = data.review;
+      if (editing) {
+        setReviews(reviews.map(r => r._id === review._id ? review : r));
+        setMyReview(review);
+      } else {
+        setReviews([...reviews, review]);
+        setMyReview(review);
       }
+      setEditing(false);
+      setFormState({ rating: 0, comment: '' });
     } catch (error) {
       console.error('Error submitting review:', error);
     }

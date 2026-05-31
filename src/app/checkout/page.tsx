@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { getAddresses, createOrder } from "@/routes";
+
 import {
   Form,
   FormControl,
@@ -121,16 +123,8 @@ export default function CheckoutPage() {
     const fetchAddresses = async () => {
       if (user && token) {
         try {
-          const res = await fetch("/api/addresses", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setSavedAddresses(data.addresses || []);
-          } else {
-            console.error("Failed to fetch addresses");
-            setSavedAddresses([]); // Ensure it's an empty array on failure
-          }
+          const data = await getAddresses(token);
+          setSavedAddresses(data.addresses || []);
         } catch (error) {
           console.error("Error fetching addresses:", error);
           setSavedAddresses([]); // Ensure it's an empty array on error
@@ -254,23 +248,8 @@ export default function CheckoutPage() {
         orderStatus: "Processing",
       };
 
-      const response = await fetch("/api/create-order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          error: "Failed to save order. Invalid server response.",
-        }));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-
-      const { orderId } = await response.json();
+      const result = await createOrder(orderData);
+      const { orderId } = result;
 
       clearCart();
       toast({

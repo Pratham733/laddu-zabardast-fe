@@ -7,6 +7,15 @@ import { sampleProducts } from "@/data/products";
 import type { Review } from '@/types/review';
 import { useAuth } from '@/context/auth-context';
 import { ProductCard } from '@/components/product-card';
+import {
+  getProductReviews,
+  submitReviewLegacy,
+  updateReviewLegacy,
+  deleteReview,
+  pinReview,
+  getProductById as fetchProductById,
+  getProducts
+} from '@/routes';
 
 interface ProductDetailsPageProps {
   params: {
@@ -26,7 +35,7 @@ const ProductReviews: React.FC<{ productId: string; user: any; isAdmin: boolean 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/products/${productId}/reviews`).then(res => res.json()).then(data => {
+    getProductReviews(productId).then(data => {
       setReviews(data.reviews || []);
       if (user) {
         const mine = (data.reviews || []).find((r: Review) => r.userId === user.userId);
@@ -42,41 +51,51 @@ const ProductReviews: React.FC<{ productId: string; user: any; isAdmin: boolean 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const method = myReview ? 'PUT' : 'POST';
-    const url = myReview ? `/api/reviews/${myReview._id}` : '/api/reviews';
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, rating, comment }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.ok) {
-      setMyReview(data.review);
-      setRating(data.review.rating);
-      setComment(data.review.comment);
+    try {
+      const reviewPayload = { productId, rating, comment };
+      const data = myReview 
+        ? await updateReviewLegacy(myReview._id!, reviewPayload)
+        : await submitReviewLegacy(reviewPayload);
+
+      setLoading(false);
+      setMyReview(data);
+      setRating(data.rating);
+      setComment(data.comment);
       // Refetch reviews
-      fetch(`/api/products/${productId}/reviews`).then(res => res.json()).then(data => setReviews(data.reviews || []));
+      const freshReviews = await getProductReviews(productId);
+      setReviews(freshReviews.reviews || []);
       setEditing(false);
-    } else {
-      alert(data.error || 'Failed to submit review');
+    } catch (err: any) {
+      setLoading(false);
+      alert(err.message || 'Failed to submit review');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this review?')) return;
     setLoading(true);
-    await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
-    setLoading(false);
-    setMyReview(null);
-    setRating(0);
-    setComment('');
-    fetch(`/api/products/${productId}/reviews`).then(res => res.json()).then(data => setReviews(data.reviews || []));
+    try {
+      await deleteReview(id);
+      setMyReview(null);
+      setRating(0);
+      setComment('');
+      const freshReviews = await getProductReviews(productId);
+      setReviews(freshReviews.reviews || []);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete review');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePin = async (id: string, pin: boolean) => {
-    await fetch(`/api/reviews/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pinned: pin }) });
-    fetch(`/api/products/${productId}/reviews`).then(res => res.json()).then(data => setReviews(data.reviews || []));
+    try {
+      await pinReview(id, pin);
+      const freshReviews = await getProductReviews(productId);
+      setReviews(freshReviews.reviews || []);
+    } catch (err: any) {
+      alert(err.message || 'Failed to pin review');
+    }
   };
 
   return (
@@ -153,20 +172,12 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setLoading(true);
     setError(null);
     // Fetch product details from API
-    fetch(`/api/products/${productId}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || 'Product not found');
-        }
-        return res.json();
-      })
-      .then((data) => setProduct(data.product))
+    fetchProductById(productId)
+      .then((data) => setProduct(data.product || data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
     // Fetch all products for related section
-    fetch('/api/add-product')
-      .then((res) => res.json())
+    getProducts()
       .then((data) => setAllProducts(data.products || []));
   }, [productId]);
 

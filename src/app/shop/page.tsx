@@ -10,6 +10,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+import { getProducts } from "@/routes";
+
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +22,7 @@ export default function ShopPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch("/api/add-product");
-        const data = await res.json();
+        const data = await getProducts();
         setProducts(data.products || []);
       } catch (error) {
         console.error("Failed to fetch products", error);

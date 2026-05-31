@@ -13,6 +13,16 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
 import type { Product } from "@/types/product";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
+import {
+  getOrders,
+  getProducts,
+  addProduct,
+  updateOrderStatus,
+  updatePaymentStatus,
+  uploadProductImage,
+  deleteProduct,
+  updateProduct
+} from "@/routes";
 
 interface OrderItem {
   id: string;
@@ -70,14 +80,7 @@ export default function AdminPage() {
     const fetchOrders = async () => {
       setIsLoadingOrders(true);
       try {
-        const response = await fetch("/api/orders", {
-          credentials: "include",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch orders: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await getOrders();
         setOrders(data.orders || []);
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -97,8 +100,7 @@ export default function AdminPage() {
     async function fetchProducts() {
       setIsLoadingProducts(true);
       try {
-        const res = await fetch("/api/add-product");
-        const data = await res.json();
+        const data = await getProducts();
         setProducts(data.products || []);
       } catch (error) {
         toast({ title: "Error", description: "Failed to fetch products.", variant: "destructive" });
@@ -215,23 +217,12 @@ export default function AdminPage() {
       const product = {
         name: formData.get("name") as string,
         price: parseFloat(formData.get("price") as string),
-        category: formData.get("category") as string,
+        category: formData.get("category") as 'laddu' | 'pickle',
         description: formData.get("description") as string,
         imageUrl: productImageUrl, // Use the already uploaded image URL
       };
 
-      const response = await fetch("/api/add-product", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(product),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Failed to add product" }));
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      }
+      const data = await addProduct(product);
 
       toast({
         title: "Product Added",
@@ -257,18 +248,7 @@ export default function AdminPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      const response = await fetch(`/api/orders`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        credentials: "include",
-        body: JSON.stringify({ orderId, status: newStatus }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update order status");
-      }
+      await updateOrderStatus(orderId, newStatus);
       setOrders((prev) =>
         prev.map((order) =>
           order._id === orderId ? { ...order, orderStatus: newStatus } : order // Update orderStatus
@@ -289,19 +269,7 @@ export default function AdminPage() {
 
   const handlePaymentStatusUpdate = async (orderId: string, newPaymentStatus: 'completed' | 'paid') => {
     try {
-      const response = await fetch(`/api/orders`, { // Assuming the same endpoint can handle payment status
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        credentials: "include",
-        body: JSON.stringify({ orderId, paymentStatus: newPaymentStatus }), // Send paymentStatus
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Failed to update payment status" }));
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      }
+      await updatePaymentStatus(orderId, newPaymentStatus);
       setOrders((prev) =>
         prev.map((order) =>
           order._id === orderId ? { ...order, paymentStatus: newPaymentStatus } : order
@@ -341,7 +309,8 @@ export default function AdminPage() {
     }
 
     setIsUploadingImage(true);
-    setUploadProgress(0);    try {
+    setUploadProgress(0);
+    try {
       // Create the form data
       const formData = new FormData();
       formData.append('file', file);
@@ -353,32 +322,8 @@ export default function AdminPage() {
         size: file.size
       });
 
-      // Make the request
-      const response = await fetch('/api/upload-product-image', {
-        method: 'POST',
-        body: formData,
-        // Do not set any headers - let the browser handle it
-      });
-
-      // Log response details
-      console.log('Upload response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || `Upload failed with status ${response.status}`);
-        } catch (e) {
-          throw new Error(`Upload failed: ${errorText || response.statusText}`);
-        }
-      }
-
-      const data = await response.json();
+      // Make the request using the helper
+      const data = await uploadProductImage(formData);
       console.log('Upload success response:', data);
       
       setProductImageUrl(data.url);
@@ -387,11 +332,11 @@ export default function AdminPage() {
         description: "Image uploaded successfully" 
       });
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload error:', err);
       toast({ 
         title: "Upload Failed", 
-        description: err instanceof Error ? err.message : "An unexpected error occurred", 
+        description: err.message || "An unexpected error occurred", 
         variant: "destructive" 
       });
     } finally {
@@ -744,19 +689,16 @@ export default function AdminPage() {
                             });
                           }}>Edit</InteractiveHoverButton>
                           <InteractiveHoverButton className="transition-all duration-200 hover:scale-105 bg-red-600 text-white px-3 py-1 rounded" onClick={async () => {
-                            if (confirm(`Are you sure you want to delete '${prod.name}'?`)) {
-                              const res = await fetch(`/api/add-product?id=${prod._id || prod.id}`, {
-                                method: 'DELETE',
-                              });
-                              if (res.ok) {
-                                toast({ title: 'Product Deleted', description: `'${prod.name}' has been deleted.` });
-                                const data = await res.json();
-                                setProducts(data.products || []);
-                              } else {
-                                toast({ title: 'Delete Failed', description: 'Could not delete product.', variant: 'destructive' });
-                              }
-                            }
-                          }}>Delete</InteractiveHoverButton>
+                             if (confirm(`Are you sure you want to delete '${prod.name}'?`)) {
+                               try {
+                                 const data = await deleteProduct((prod._id || prod.id)!);
+                                 toast({ title: 'Product Deleted', description: `'${prod.name}' has been deleted.` });
+                                 setProducts(data.products || []);
+                               } catch (err: any) {
+                                 toast({ title: 'Delete Failed', description: err.message || 'Could not delete product.', variant: 'destructive' });
+                               }
+                             }
+                           }}>Delete</InteractiveHoverButton>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -788,18 +730,17 @@ export default function AdminPage() {
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-                const res = await fetch(`/api/add-product?id=${editingProduct._id || editingProduct.id}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ ...editForm }),
-                });
-                if (res.ok) {
+                try {
+                  const data = await updateProduct((editingProduct._id || editingProduct.id)!, {
+                    ...editForm,
+                    category: editForm.category as 'laddu' | 'pickle',
+                    price: parseFloat(editForm.price)
+                  });
                   toast({ title: 'Product Updated', description: 'Product details updated.' });
                   setEditingProduct(null);
-                  const data = await res.json();
                   setProducts(data.products || []);
-                } else {
-                  toast({ title: 'Update Failed', description: 'Could not update product.', variant: 'destructive' });
+                } catch (err: any) {
+                  toast({ title: 'Update Failed', description: err.message || 'Could not update product.', variant: 'destructive' });
                 }
               }}
               className="space-y-5"

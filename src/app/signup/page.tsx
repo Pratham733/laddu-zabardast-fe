@@ -28,6 +28,7 @@ import { toast } from "@/hooks/use-toast";
 import { UserPlus, Mail, Lock, LoaderCircle } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
+import { signup } from "@/routes";
 import { Button } from "@/components/ui/button"; // Import Button
 import { MailOpen } from "lucide-react"; // Import MailOpen icon
 
@@ -140,7 +141,6 @@ const ImpressiveLamp = () => (
 export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setToken } = useAuth(); // Use setToken from context
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignupFormValues>({
@@ -153,94 +153,34 @@ export default function SignupPage() {
     },
   });
 
-  // Redirect after successful signup/login
-  const handleSuccessRedirect = () => {
-    const redirectUrl = searchParams?.get("redirect") || "/"; // Default to home if no redirect specified
-    router.push(redirectUrl);
-  };
-
   // Handle Email/Password Signup via API route
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
-    let responseText = ""; // To store raw response text
     try {
-      const response = await fetch("/api/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          password: data.password,
-        }), // Send only necessary data
+      await signup({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
       });
 
-      // Store raw response text regardless of status
-      responseText = await response.text();
-
-      // Check if the response is ok (status code 2xx)
-      if (!response.ok) {
-        let errorMsg = `Signup failed. Server returned status ${response.status}.`;
-        try {
-          // Try to parse the text as JSON
-          const result = JSON.parse(responseText);
-          errorMsg = result.error || errorMsg;
-        } catch (parseError: any) {
-          // If parsing fails, the response was likely not JSON (e.g., HTML error page)
-          console.error("Signup API Error - Non-JSON response:", responseText);
-          if (responseText.toLowerCase().includes("<!doctype html")) {
-            errorMsg =
-              "Signup failed due to a server error. Please try again later.";
-          } else {
-            errorMsg = `Signup failed. Server returned: ${responseText.substring(0, 100)}... Check server logs.`; // Show partial response
-          }
-        }
-        toast({
-          title: "Signup Failed",
-          description: errorMsg,
-          variant: "destructive",
-        });
-      } else {
-        // Response is OK (status 201 Created typically)
-        try {
-          const result = JSON.parse(responseText); // Parse the stored text
-          toast({
-            title: "Signup Successful",
-            description: "Your account has been created. Please log in.", // Prompt user to log in
-          });
-          // Redirect to login page after successful signup, preserving original redirect target
-          const loginUrl = new URL("/login", window.location.origin);
-          if (searchParams?.get("redirect")) {
-            loginUrl.searchParams.set(
-              "redirect",
-              searchParams.get("redirect")!,
-            );
-          }
-          router.push(loginUrl.toString());
-          // No automatic login here - user must login separately
-        } catch (jsonError) {
-          console.error(
-            "Failed to parse successful signup response as JSON:",
-            responseText,
-          );
-          toast({
-            title: "Signup Partially Successful?",
-            description:
-              "Account likely created, but an issue occurred processing the success response. Please try logging in.",
-            variant: "destructive", // Use destructive to indicate an issue
-          });
-          router.push("/login"); // Redirect to login anyway
-        }
+      toast({
+        title: "Signup Successful",
+        description: "Your account has been created. Please log in.", // Prompt user to log in
+      });
+      // Redirect to login page after successful signup, preserving original redirect target
+      const loginUrl = new URL("/login", window.location.origin);
+      if (searchParams?.get("redirect")) {
+        loginUrl.searchParams.set(
+          "redirect",
+          searchParams.get("redirect")!,
+        );
       }
+      router.push(loginUrl.toString());
     } catch (error: any) {
-      // Catch network errors or other exceptions during fetch
-      console.error("Signup network/fetch error:", error);
       toast({
         title: "Signup Failed",
-        description:
-          "A network error occurred during signup. Please check your connection and try again.",
+        description: error.message || "Something went wrong during signup. Please try again.",
         variant: "destructive",
       });
     } finally {

@@ -10,6 +10,8 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 
+import { getProducts } from '@/routes';
+
 export default function Home() {
   const { token, loading } = useAuth(); // ✅ loading added to avoid premature redirect
   const router = useRouter();
@@ -32,8 +34,7 @@ export default function Home() {
 
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/add-product');
-        const data = await res.json();
+        const data = await getProducts();
 
         const products: Product[] = (data.products || []).map((item: any) => ({
           ...item,

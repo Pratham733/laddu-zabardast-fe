@@ -31,6 +31,7 @@ import { useAuth } from "@/context/auth-context";
 import { Separator } from "@/components/ui/separator";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { motion } from "framer-motion";
+import { login } from "@/routes";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -164,7 +165,6 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { setToken } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [lampOn, setLampOn] = useState(true);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -175,33 +175,29 @@ export default function LoginPage() {
   });
 
   const handleSuccessRedirect = () => {
-    const redirectUrl = searchParams?.get("redirect") || "/";
-    router.push(redirectUrl);
+    const callbackUrl = searchParams?.get("callbackUrl");
+    if (callbackUrl) {
+      router.push(callbackUrl);
+    } else {
+      router.push("/");
+    }
   };
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    let responseText = "";
     try {
       const retryLogin = async (retries = 2) => {
         for (let i = 0; i < retries; i++) {
           try {
-            const response = await fetch("/api/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
-              signal: AbortSignal.timeout(15000), // Reduced timeout to 15 seconds
-            });
-
-            if (response.status === 503) {
+            return await login(data, AbortSignal.timeout(15000));
+          } catch (err: any) {
+            if (err.message && err.message.includes("503") && i < retries - 1) {
               console.log(`[Login] Attempt ${i + 1} failed, retrying...`);
               await new Promise((resolve) =>
                 setTimeout(resolve, 1000 * (i + 1)),
-              ); // Exponential backoff
+              );
               continue;
             }
-            return response;
-          } catch (err) {
             if (i === retries - 1) throw err;
             console.log(`[Login] Attempt ${i + 1} failed, retrying...`);
             await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
@@ -210,51 +206,18 @@ export default function LoginPage() {
         throw new Error("All retry attempts failed");
       };
 
-      const response = await retryLogin();
+      const result = await retryLogin();
+      toast({ title: "Login Successful", description: "Welcome back!" });
 
-      responseText = await response.text();
-
-      if (!response.ok) {
-        let errorMsg = "Invalid email or password.";
-        try {
-          const result = JSON.parse(responseText);
-          errorMsg = result.error || errorMsg;
-        } catch {
-          if (responseText.toLowerCase().includes("<!doctype html")) {
-            errorMsg = "Server error. Please try again later.";
-          } else {
-            errorMsg = `Server returned: ${responseText.substring(0, 100)}...`;
-          }
-        }
-
+      if (result.token) {
+        setToken(result.token);
+        handleSuccessRedirect();
+      } else {
         toast({
-          title: "Login Failed",
-          description: errorMsg,
+          title: "Login Error",
+          description: "Login succeeded but no token received.",
           variant: "destructive",
         });
-      } else {
-        try {
-          const result = JSON.parse(responseText);
-          toast({ title: "Login Successful", description: "Welcome back!" });
-
-          if (result.token) {
-            setToken(result.token);
-            handleSuccessRedirect();
-          } else {
-            toast({
-              title: "Login Error",
-              description: "Login succeeded but no token received.",
-              variant: "destructive",
-            });
-          }
-        } catch {
-          toast({
-            title: "Login Error",
-            description: "Login succeeded but response was unreadable.",
-            variant: "destructive",
-          });
-          handleSuccessRedirect();
-        }
       }
     } catch (error: any) {
       // Handle specific error types
@@ -263,16 +226,6 @@ export default function LoginPage() {
           title: "Login Failed",
           description:
             "Server is taking too long to respond. Please try again in a few moments.",
-          variant: "destructive",
-        });
-      } else if (
-        error instanceof TypeError &&
-        error.message.includes("fetch")
-      ) {
-        toast({
-          title: "Login Failed",
-          description:
-            "Unable to connect to the server. Please check your internet connection.",
           variant: "destructive",
         });
       } else if (error.message === "All retry attempts failed") {
@@ -285,8 +238,7 @@ export default function LoginPage() {
       } else {
         toast({
           title: "Login Failed",
-          description:
-            "An unexpected error occurred. Our team has been notified.",
+          description: error.message || "Invalid email or password.",
           variant: "destructive",
         });
       }

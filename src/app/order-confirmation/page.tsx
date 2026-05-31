@@ -11,7 +11,7 @@ import { OrderSummary } from "./OrderSummary";
 import { AnimatePresence, motion } from "framer-motion";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { ConfettiFireworks } from "@/components/magicui/confetti";
-
+import { getOrderById, generateInvoice } from "@/routes";
 interface OrderItem {
   id: string;
   name: string;
@@ -52,21 +52,7 @@ export default function OrderConfirmationPage() {
 
       try {
         console.log(`Fetching order details for order ID: ${orderId}`);
-        const res = await fetch(`/api/orders/${orderId}`, {
-          method: "GET",
-          cache: "no-store", // Ensure fresh data
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // Necessary for session cookies
-        });
-
-        if (!res.ok) {
-          console.error("Failed to fetch order:", await res.text());
-          throw new Error("Failed to fetch order");
-        }
-
-        const data = await res.json();
+        const data = await getOrderById(orderId);
         console.log("Order details fetched successfully:", data.order);
         setOrder(data.order); // Ensure the backend response includes the totalAmount property
       } catch (err) {
@@ -92,9 +78,7 @@ export default function OrderConfirmationPage() {
     setDownloadLoading(true);
     try {
       console.log(`Generating invoice for order ID: ${order.id}`);
-      const res = await fetch(`/api/generate-invoice?orderId=${order.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await generateInvoice(order.id);
       // Log status and headers for diagnostics
       console.log("Invoice download response status:", res.status);
       console.log(

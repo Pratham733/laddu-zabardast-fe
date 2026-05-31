@@ -5,6 +5,7 @@ import { type ChangeEvent } from 'react';
 import { useAuth } from '@/context/auth-context';
 import type { Address, AppUser } from '@/types/product';
 import { useState, useEffect } from 'react';
+import { getMe, updateProfile, changePassword, getAddresses, saveAddress, deleteAddress } from '@/routes';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,19 +144,14 @@ export default function ProfilePage() {
     if (!user && token) {
       (async () => {
         try {
-          const res = await fetch('/api/me', {
-            headers: { Authorization: `Bearer ${token}` },
+          const data = await getMe(token);
+          // Defensive: ensure firstName/lastName fallback to empty string if missing
+          setUser({
+            ...data.user,
+            firstName: data.user.firstName ?? '',
+            lastName: data.user.lastName ?? '',
+            source: 'db',
           });
-          if (res.ok) {
-            const data = await res.json();
-            // Defensive: ensure firstName/lastName fallback to empty string if missing
-            setUser({
-              ...data.user,
-              firstName: data.user.firstName ?? '',
-              lastName: data.user.lastName ?? '',
-              source: 'db',
-            });
-          }
         } catch (e) {}
       })();
     }
@@ -209,27 +205,13 @@ export default function ProfilePage() {
 
     setIsSavingPhone(true);
     try {
-      const response = await fetch('/api/update-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ phone: editablePhone }), // Send empty string if clearing, or the new number
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({ title: "Phone Number Updated", description: "Your phone number has been successfully updated." });
-        setUser({ ...user!, phone: editablePhone === '' ? null : editablePhone }); // Update user context, store null if empty
-        setIsEditingPhone(false);
-      } else {
-        toast({ title: "Update Failed", description: result.error || "Could not update phone number.", variant: "destructive" });
-      }
-    } catch (error) {
+      await updateProfile({ phone: editablePhone });
+      toast({ title: "Phone Number Updated", description: "Your phone number has been successfully updated." });
+      setUser({ ...user!, phone: editablePhone === '' ? null : editablePhone }); // Update user context, store null if empty
+      setIsEditingPhone(false);
+    } catch (error: any) {
       console.error("Failed to update phone number:", error);
-      toast({ title: "Error", description: "An unexpected error occurred. Please try again.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "An unexpected error occurred. Please try again.", variant: "destructive" });
     } finally {
       setIsSavingPhone(false);
     }
@@ -397,24 +379,23 @@ function AddressManager({ user, token, setUser }: { user: AppUser, token: string
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/addresses', { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setAddresses(data.addresses || []);
-        setUser({
-          source: 'jwt',
-          userId: user?.userId || '',
-          email: user?.email ?? null,
-          firstName: user?.firstName ?? '',
-          lastName: user?.lastName ?? '',
-          phone: user?.phone ?? null,
-          photoURL: user?.photoURL ?? null,
-          role: user?.role ?? null,
-          isAdmin: user?.isAdmin ?? false,
-          picture: user?.picture ?? null,
-          addresses: data.addresses || [],
-        });
-      }
+      const data = await getAddresses(token);
+      setAddresses(data.addresses || []);
+      setUser({
+        source: 'jwt',
+        userId: user?.userId || '',
+        email: user?.email ?? null,
+        firstName: user?.firstName ?? '',
+        lastName: user?.lastName ?? '',
+        phone: user?.phone ?? null,
+        photoURL: user?.photoURL ?? null,
+        role: user?.role ?? null,
+        isAdmin: user?.isAdmin ?? false,
+        picture: user?.picture ?? null,
+        addresses: data.addresses || [],
+      });
+    } catch (e) {
+      console.error("Failed to fetch addresses:", e);
     } finally {
       setLoading(false);
     }
@@ -435,18 +416,25 @@ function AddressManager({ user, token, setUser }: { user: AppUser, token: string
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/addresses', {
-        method: editingIndex === null ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        await fetchAddresses();
-        handleCancel();
-        toast({ title: 'Address saved!' });
-      } else {
-        toast({ title: 'Failed to save address', variant: 'destructive' });
-      }
+      // NOTE: We support saveAddress (which currently maps to POST). If editing, we can add a custom updateAddress in addresses.ts,
+      // or map POST/PUT to saveAddress since it saves.
+      // Wait, let's look at the original code: it made POST (new) or PUT (edit) to '/api/addresses'.
+      // Let's modify saveAddress to accept custom options, or send the method inside options,
+      // or we can just call fetch or use saveAddress.
+      // Actually, since saveAddress handles saving, let's call saveAddress. Let's make sure it handles both.
+      // Wait, let's use the saveAddress API function we created. We can pass form and token.
+      // Let's see: saveAddress uses POST /api/addresses. Let's make sure if editing, we can still use POST or PUT.
+      // Let's update src/routes/addresses.ts to support optional PUT method if editingIndex is not null!
+      // Or we can just call saveAddress as is. Let's check how the backend handles it.
+      // The backend probably has a PUT/POST handler.
+      // Let's call saveAddress or we can update our addresses.ts to support updateAddress too if needed.
+      // Let's use saveAddress (POST) or custom options. Let's use saveAddress with PUT/POST option.
+      const res = await saveAddress(form, token, editingIndex === null ? 'POST' : 'PUT');
+      await fetchAddresses();
+      handleCancel();
+      toast({ title: 'Address saved!' });
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to save address', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -455,16 +443,11 @@ function AddressManager({ user, token, setUser }: { user: AppUser, token: string
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/addresses/${idx}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        await fetchAddresses();
-        toast({ title: 'Address deleted!' });
-      } else {
-        toast({ title: 'Failed to delete address', variant: 'destructive' });
-      }
+      await deleteAddress(idx, token);
+      await fetchAddresses();
+      toast({ title: 'Address deleted!' });
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to delete address', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -553,44 +536,28 @@ function PasswordManager({ token }: { token: string | null }) {
     
     setLoading(true);
     try {
-      const res = await fetch('/api/change-password', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          currentPassword: form.currentPassword,
-          newPassword: form.newPassword
-        }),
+      await changePassword({
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword
       });
 
-      if (res.ok) {
-        toast({
-          title: "Success!",
-          description: "Your password has been updated successfully.",
-          variant: "default",
-        });
-        setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setPasswordStrength({
-          length: false,
-          number: false,
-          special: false,
-          uppercase: false,
-          lowercase: false
-        });
-      } else {
-        const data = await res.json();
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update password",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Success!",
+        description: "Your password has been updated successfully.",
+        variant: "default",
+      });
+      setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordStrength({
+        length: false,
+        number: false,
+        special: false,
+        uppercase: false,
+        lowercase: false
+      });
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: error.message || "Failed to update password",
         variant: "destructive",
       });
     } finally {

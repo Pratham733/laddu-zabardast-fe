@@ -22,6 +22,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = 'ladooExpressCart';
 
+import { getCart, updateCart } from '@/routes';
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user, token } = useAuth();
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -57,10 +59,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     // Logged in: fetch from backend
-    fetch(`/api/cart/${user.userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.ok ? res.json() : { items: [] })
+    getCart(user.userId, token)
       .then(data => {
         // Only set cart if backend returns items
         if (Array.isArray(data.items)) {
@@ -90,14 +89,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         productId: item._id?.toString() || item.id,
         quantity: item.quantity
       }));
-      fetch(`/api/cart/${user.userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ items: itemsToSave }),
-      });
+      updateCart(user.userId, itemsToSave, token);
     }
   }, [cart, user, token, isInitialised]);
 
