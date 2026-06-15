@@ -8,10 +8,10 @@ export interface Product {
   imageUrl: string;
   category: 'laddu' | 'pickle';
   aiHint?: string;
-  available?: boolean;  // Added available field
+  available?: boolean;  
 }
 
-// ✅ Define reusable Address type
+
 export type Address = {
   street: string;
   city: string;
@@ -21,7 +21,6 @@ export type Address = {
   isDefault?: boolean;
 };
 
-// ✅ Extend AppUser with addresses
 export type AppUser = {
   source: 'jwt' | 'db';
   userId: string;

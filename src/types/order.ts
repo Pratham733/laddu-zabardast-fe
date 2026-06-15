@@ -30,13 +30,20 @@ export interface Order {
   items: OrderItem[];
   shippingDetails: ShippingDetails;
   totalAmount: number;
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'completed';
+  paymentStatus: PaymentStatus;
   paymentMethod: 'cod' | 'card' | 'upi' | 'cash';
-  orderStatus: 'processing' | 'shipped' | 'delivered';
+  orderStatus: OrderStatus;
   createdAt?: string;
 }
 
-
+export interface PaymentStatus {
+  status: 'pending' | 'paid' | 'failed' | 'completed';
+  message: string;
+}
+export interface OrderStatus {
+  status: 'processing' | 'shipped' | 'delivered';
+  message: string;
+}
 export interface SimplifiedOrder {
   id: string;
   date: string;
@@ -117,9 +124,9 @@ export interface OrderStatusUpdateErrorResponse {
 export interface OrderStatusUpdateSuccessResponse {
   message: string;
 }
-export interface OrderStatus {
+export interface OrderDetails {
   orderId: string;
-  status: 'processing' | 'shipped' | 'delivered';
+  orderStatus: OrderStatus;
 }
 export interface OrderStatusResponse {
   message: string;
@@ -133,8 +140,5 @@ export interface OrderStatusSuccessResponse {
 
 export interface OrderStatusUpdate {
   orderId: string;
-  status: 'processing' | 'shipped' | 'delivered';
-}
-export interface OrderStatusUpdateResponse {
-  message: string;
+  orderStatus: OrderStatus;
 }

@@ -22,15 +22,15 @@ export default function Home() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   // ✅ Redirect ONLY after auth check is done
-  useEffect(() => {
-    if (!loading && !token) {
-      router.push("/login");
-    }
-  }, [loading, token, router]);
+  // useEffect(() => {
+  //   if (!loading && !token) {
+  //     router.push("/login");
+  //   }
+  // }, [loading, token, router]);
 
   // ✅ Fetch products only if token exists
   useEffect(() => {
-    if (!token) return;
+    // if (!token) return;
 
     const fetchProducts = async () => {
       try {
@@ -64,7 +64,7 @@ export default function Home() {
   }, [token]);
 
   // ✅ Don't render anything during auth check
-  if (loading || (!token && !loading)) {
+  if (loading) {
     return null;
   }
 
