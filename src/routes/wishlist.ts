@@ -7,7 +7,7 @@ export interface WishlistResponse {
 }
 
 export async function getWishlist(userId: string, token: string): Promise<WishlistResponse> {
-  return apiClient(`/api/wishlist/${userId}`, {
+  return apiClient(`/wishlist/${userId}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -16,7 +16,7 @@ export async function getWishlist(userId: string, token: string): Promise<Wishli
 }
 
 export async function updateWishlist(userId: string, wishlist: any[], token: string): Promise<any> {
-  return apiClient(`/api/wishlist/${userId}`, {
+  return apiClient(`/wishlist/${userId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,

@@ -10,9 +10,8 @@ export async function apiClient<T = any>(
   options: RequestOptions = {}
 ): Promise<T> {
   const { params, headers, responseType, ...restOptions } = options;
-
-  // Build URL with query params if provided
-  let url = endpoint;
+  const backendURL = ((import.meta as any).env?.VITE_BACKEND_URL as string) || 'http://localhost:8080';
+  let url = `${backendURL}${endpoint}`;
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
@@ -34,14 +33,6 @@ export async function apiClient<T = any>(
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
-  // Automatically inject token from localStorage if available
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-  }
-
   const mergedHeaders = {
     ...defaultHeaders,
     ...headers,
@@ -50,6 +41,7 @@ export async function apiClient<T = any>(
   const response = await fetch(url, {
     ...restOptions,
     headers: mergedHeaders,
+    credentials:'include',
   });
 
   if (!response.ok) {

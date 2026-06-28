@@ -3,19 +3,17 @@
 import { apiClient } from './apiClient';
 
 export interface LoginResponse {
-  token: string;
   user: any;
   message?: string;
 }
 
 export interface SignupResponse {
-  token?: string;
   user?: any;
   message?: string;
 }
 
 export async function login(data: any, signal?: AbortSignal): Promise<LoginResponse> {
-  return apiClient('/api/login', {
+  return apiClient('/login', {
     method: 'POST',
     body: JSON.stringify(data),
     signal,
@@ -23,30 +21,37 @@ export async function login(data: any, signal?: AbortSignal): Promise<LoginRespo
 }
 
 export async function signup(data: any): Promise<SignupResponse> {
-  return apiClient('/api/signup', {
+  return apiClient('/signup', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
-export async function getMe(token: string): Promise<any> {
-  return apiClient('/api/me', {
+export async function logout(): Promise<any> {
+  return apiClient('/logout', { method: 'POST' });
+}
+
+export async function getProfile(): Promise<any> {
+  return apiClient('/profile', {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  });
+}
+
+export async function getUser(): Promise<any> {
+  return apiClient('/user', {
+    method: 'GET',
   });
 }
 
 export async function updateProfile(data: any): Promise<any> {
-  return apiClient('/api/update-profile', {
+  return apiClient('/update-profile', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export async function changePassword(data: any): Promise<any> {
-  return apiClient('/api/change-password', {
+  return apiClient('/change-password', {
     method: 'POST',
     body: JSON.stringify(data),
   });

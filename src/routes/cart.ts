@@ -7,7 +7,7 @@ export interface CartResponse {
 }
 
 export async function getCart(userId: string, token: string): Promise<CartResponse> {
-  return apiClient(`/api/cart/${userId}`, {
+  return apiClient(`/cart/${userId}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -16,7 +16,7 @@ export async function getCart(userId: string, token: string): Promise<CartRespon
 }
 
 export async function updateCart(userId: string, items: any[], token: string): Promise<any> {
-  return apiClient(`/api/cart/${userId}`, {
+  return apiClient(`/cart/${userId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,

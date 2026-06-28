@@ -31,7 +31,7 @@ import { useAuth } from "@/context/auth-context";
 import { Separator } from "@/components/ui/separator";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { motion } from "framer-motion";
-import { login } from "@/routes";
+import { login, getUser } from "@/routes";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -163,7 +163,7 @@ const globalStyles = `
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setToken } = useAuth();
+  const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -209,13 +209,30 @@ export default function LoginPage() {
       const result = await retryLogin();
       toast({ title: "Login Successful", description: "Welcome back!" });
 
-      if (result.token) {
-        setToken(result.token);
+      let userDetails = result.user;
+      if (!userDetails) {
+        try {
+          const meResult = await getUser();
+          if (meResult && meResult.user) {
+            userDetails = meResult.user;
+          }
+        } catch (meError) {
+          console.error("Failed to fetch user details after login:", meError);
+        }
+      }
+
+      if (userDetails) {
+        setUser({
+          ...userDetails,
+          firstName: userDetails.firstName ?? "",
+          lastName: userDetails.lastName ?? "",
+          source: "db",
+        });
         handleSuccessRedirect();
       } else {
         toast({
           title: "Login Error",
-          description: "Login succeeded but no token received.",
+          description: "Login succeeded but user details were not received.",
           variant: "destructive",
         });
       }

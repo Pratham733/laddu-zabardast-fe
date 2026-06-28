@@ -100,7 +100,7 @@ type Order struct {
 
 ### 1. Authentication & Profile
 
-#### `POST /api/login`
+#### `POST /login`
 Authenticates a user.
 - **Request Body**:
   ```json
@@ -117,7 +117,7 @@ Authenticates a user.
   }
   ```
 
-#### `POST /api/signup`
+#### `POST /signup`
 Registers a new user.
 - **Request Body**:
   ```json
@@ -137,7 +137,7 @@ Registers a new user.
   }
   ```
 
-#### `GET /api/me`
+#### `GET /user`
 Retrieves currently authenticated user state from token context.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -147,7 +147,7 @@ Retrieves currently authenticated user state from token context.
   }
   ```
 
-#### `POST /api/update-profile`
+#### `POST /update-profile`
 Updates user profile fields (e.g. phone number).
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -164,7 +164,7 @@ Updates user profile fields (e.g. phone number).
   }
   ```
 
-#### `POST /api/change-password`
+#### `POST /change-password`
 Changes account password.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -185,7 +185,7 @@ Changes account password.
 
 ### 2. Wishlist
 
-#### `GET /api/wishlist/:userId`
+#### `GET /wishlist/:userId`
 Fetch a user's wishlist items.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -195,7 +195,7 @@ Fetch a user's wishlist items.
   }
   ```
 
-#### `PUT /api/wishlist/:userId`
+#### `PUT /wishlist/:userId`
 Save/replace wishlist state.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -215,7 +215,7 @@ Save/replace wishlist state.
 
 ### 3. Shopping Cart
 
-#### `GET /api/cart/:userId`
+#### `GET /cart/:userId`
 Retrieves items in the user's cart.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -234,7 +234,7 @@ Retrieves items in the user's cart.
   }
   ```
 
-#### `PUT /api/cart/:userId`
+#### `PUT /cart/:userId`
 Saves updated cart items.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -259,7 +259,7 @@ Saves updated cart items.
 
 ### 4. Products
 
-#### `GET /api/add-product`
+#### `GET /add-product`
 Gets list of all products.
 - **Response Structure (200 OK)**:
   ```json
@@ -268,7 +268,7 @@ Gets list of all products.
   }
   ```
 
-#### `GET /api/products/:productId`
+#### `GET /products/:productId`
 Gets details of a single product.
 - **Response Structure (200 OK)**:
   ```json
@@ -277,7 +277,7 @@ Gets details of a single product.
   }
   ```
 
-#### `POST /api/add-product` (Admin Only)
+#### `POST /add-product` (Admin Only)
 Adds a new product to the database.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -297,7 +297,7 @@ Adds a new product to the database.
   }
   ```
 
-#### `PUT /api/add-product?id=:id` (Admin Only)
+#### `PUT /add-product?id=:id` (Admin Only)
 Updates product details.
 - **Headers**: `Authorization: Bearer <token>`
 - **Query Params**: `id` (product ID)
@@ -318,7 +318,7 @@ Updates product details.
   }
   ```
 
-#### `DELETE /api/add-product?id=:id` (Admin Only)
+#### `DELETE /add-product?id=:id` (Admin Only)
 Deletes product from the store.
 - **Headers**: `Authorization: Bearer <token>`
 - **Query Params**: `id`
@@ -329,7 +329,7 @@ Deletes product from the store.
   }
   ```
 
-#### `POST /api/upload-product-image` (Admin Only)
+#### `POST /upload-product-image` (Admin Only)
 Uploads image binary data and returns access URL.
 - **Headers**: `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
 - **Request Body**: Form Data with file field `file`
@@ -344,7 +344,7 @@ Uploads image binary data and returns access URL.
 
 ### 5. Shipping Addresses
 
-#### `GET /api/addresses`
+#### `GET /addresses`
 Retrieves user addresses.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -354,7 +354,7 @@ Retrieves user addresses.
   }
   ```
 
-#### `POST /api/addresses`
+#### `POST /addresses`
 Adds a new address.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**: `{ ...Address... }`
@@ -365,7 +365,7 @@ Adds a new address.
   }
   ```
 
-#### `PUT /api/addresses`
+#### `PUT /addresses`
 Updates address configuration (e.g. setting as default).
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**: `{ ...Address... }`
@@ -376,7 +376,7 @@ Updates address configuration (e.g. setting as default).
   }
   ```
 
-#### `DELETE /api/addresses/:idx`
+#### `DELETE /addresses/:idx`
 Removes an address at an index location.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -390,7 +390,7 @@ Removes an address at an index location.
 
 ### 6. Orders
 
-#### `GET /api/orders`
+#### `GET /orders`
 Retrieves order history. Admin gets all orders. Users get only their filtered orders.
 - **Headers**: `Authorization: Bearer <token>`
 - **Query Params**: `email` (optional, for filtering regular user history)
@@ -401,7 +401,7 @@ Retrieves order history. Admin gets all orders. Users get only their filtered or
   }
   ```
 
-#### `GET /api/orders/:orderId`
+#### `GET /orders/:orderId`
 Retrieves a specific order.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -411,7 +411,7 @@ Retrieves a specific order.
   }
   ```
 
-#### `POST /api/create-order`
+#### `POST /create-order`
 Submits a checkout order.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -432,7 +432,7 @@ Submits a checkout order.
   }
   ```
 
-#### `PATCH /api/orders` (Admin Only)
+#### `PATCH /orders` (Admin Only)
 Updates order or payment state.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -450,7 +450,7 @@ Updates order or payment state.
   }
   ```
 
-#### `GET /api/generate-invoice`
+#### `GET /generate-invoice`
 Generates and downloads PDF invoice for an order.
 - **Headers**: `Authorization: Bearer <token>`
 - **Query Params**: `orderId`
@@ -462,7 +462,7 @@ Generates and downloads PDF invoice for an order.
 
 ### 7. Product Reviews
 
-#### `GET /api/products/:productId/reviews`
+#### `GET /products/:productId/reviews`
 List reviews for a product.
 - **Response Structure (200 OK)**:
   ```json
@@ -471,7 +471,7 @@ List reviews for a product.
   }
   ```
 
-#### `POST /api/products/:productId/reviews`
+#### `POST /products/:productId/reviews`
 Submit a new review.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -488,7 +488,7 @@ Submit a new review.
   }
   ```
 
-#### `PUT /api/products/:productId/reviews/:reviewId`
+#### `PUT /products/:productId/reviews/:reviewId`
 Modify review comment or rating.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:
@@ -505,7 +505,7 @@ Modify review comment or rating.
   }
   ```
 
-#### `DELETE /api/reviews/:reviewId` (Admin or Review Owner)
+#### `DELETE /reviews/:reviewId` (Admin or Review Owner)
 Removes a review.
 - **Headers**: `Authorization: Bearer <token>`
 - **Response Structure (200 OK)**:
@@ -515,7 +515,7 @@ Removes a review.
   }
   ```
 
-#### `PATCH /api/reviews/:reviewId` (Admin Only)
+#### `PATCH /reviews/:reviewId` (Admin Only)
 Pins/unpins review to top of page.
 - **Headers**: `Authorization: Bearer <token>`
 - **Request Body**:

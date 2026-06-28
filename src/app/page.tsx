@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { HeroCarousel } from '@/components/hero-banner';
-import { ProductShowcase } from '@/components/product-showcase';
-import type { Product } from '@/types/product';
-import { useAuth } from '@/context/auth-context';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { HeroCarousel } from "@/components/hero-banner";
+import { ProductShowcase } from "@/components/product-showcase";
+import type { Product } from "@/types/product";
+import { useAuth } from "@/context/auth-context";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 
-import { getProducts } from '@/routes';
+import { getProducts } from "@/routes";
 
 export default function Home() {
-  const { token, loading } = useAuth(); // ✅ loading added to avoid premature redirect
+  const { user, loading } = useAuth(); // ✅ loading added to avoid premature redirect
   const router = useRouter();
 
   const [laddus, setLaddus] = useState<Product[]>([]);
@@ -43,25 +43,27 @@ export default function Home() {
 
         // Remove duplicates by _id or id
         const uniqueProducts = Array.from(
-          new Map(products.map((p) => [(p._id || p.id), p])).values()
+          new Map(products.map((p) => [p._id || p.id, p])).values(),
         );
         // For 'Laddus', show only products with category 'laddu' (not 'all')
         const laddusOnly = uniqueProducts.filter((p) => p.category === "laddu");
         // For 'Pickles', show only products with category 'pickle' (not 'all')
-        const picklesOnly = uniqueProducts.filter((p) => p.category === "pickle");
+        const picklesOnly = uniqueProducts.filter(
+          (p) => p.category === "pickle",
+        );
 
         setAllProducts(uniqueProducts);
         setLaddus(laddusOnly);
         setPickles(picklesOnly);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error("Error fetching products:", error);
       } finally {
         setProductLoading(false);
       }
     };
 
     fetchProducts();
-  }, [token]);
+  }, [user]);
 
   // ✅ Don't render anything during auth check
   if (loading) {
@@ -73,8 +75,16 @@ export default function Home() {
       <HeroCarousel />
       {!productLoading && (
         <>
-          <ProductShowcase id="laddu" title="Our Delicious Laddus" products={laddus} />
-          <ProductShowcase id="pickle" title="Tangy Homemade Pickles" products={pickles} />
+          <ProductShowcase
+            id="laddu"
+            title="Our Delicious Laddus"
+            products={laddus}
+          />
+          <ProductShowcase
+            id="pickle"
+            title="Tangy Homemade Pickles"
+            products={pickles}
+          />
         </>
       )}
     </>

@@ -27,14 +27,14 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function Sidebar() {
-  const { token, isUserAdmin } = useAuth();
+  const { user, isUserAdmin } = useAuth();
 
   return (
     <SidebarMenu>
       {/* ✅ Other sidebar items can go here */}
 
       {/* ✅ Conditionally show Admin Dashboard only if logged in and is admin */}
-      {token && isUserAdmin() && (
+      {user && isUserAdmin() && (
         <SidebarMenuItem>
           <SidebarMenuButton>
             <Link href="/admin">Admin Dashboard</Link>

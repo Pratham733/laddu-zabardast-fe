@@ -439,7 +439,7 @@ export function Navbar() {
                   >
                     <SheetHeader className="mb-4">
                       <SheetTitle className="text-lg font-semibold text-primary">
-                        {token ? "My Account" : "Menu"}
+                        {user ? "My Account" : "Menu"}
                       </SheetTitle>
                     </SheetHeader>
 
@@ -475,7 +475,7 @@ export function Navbar() {
 
                     <nav className="flex flex-col gap-1">
                       {/* Auth-dependent navigation with larger touch targets */}
-                      {token ? (
+                      {user ? (
                         <>
                           <SheetClose asChild>
                             <Link
@@ -532,7 +532,7 @@ export function Navbar() {
                       )}
 
                       {/* Admin link with larger touch target */}
-                      {token && isUserAdmin() && (
+                      {user && isUserAdmin() && (
                         <>
                           <Separator className="my-3" />
                           <SheetClose asChild>
@@ -548,7 +548,7 @@ export function Navbar() {
                       )}
 
                       {/* Logout with larger touch target */}
-                      {token && (
+                      {user && (
                         <>
                           <Separator className="my-3" />
                           <SheetClose asChild>
