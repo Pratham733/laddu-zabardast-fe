@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { Review } from '@/types/review';
+import type { Review } from '@/models';
 
 export async function getProductReviews(productId: string): Promise<{ reviews: Review[] }> {
   return apiClient(`/products/${productId}/reviews`, {

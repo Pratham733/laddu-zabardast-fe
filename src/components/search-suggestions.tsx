@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
-import type { Product } from "@/types/product";
+import type { Product } from "@/models";
 import { Card } from "@/components/ui/card";
 
 interface SearchSuggestionsProps {

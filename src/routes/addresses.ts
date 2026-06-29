@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { Address } from '@/types/product';
+import type { Address } from '@/models';
 
 export async function getAddresses(token?: string): Promise<{ addresses: Address[] }> {
   const headers: Record<string, string> = {};

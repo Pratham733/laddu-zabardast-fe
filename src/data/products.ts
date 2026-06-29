@@ -1,5 +1,4 @@
-//src/components/product-card.tsx
-import type { Product } from '@/types/product';
+import type { Product } from '@/models';
 
 // Sample products removed - now using only database products
 export const sampleProducts: Product[] = [

@@ -1,16 +1,5 @@
-// src/routes/auth.ts
-
 import { apiClient } from './apiClient';
-
-export interface LoginResponse {
-  user: any;
-  message?: string;
-}
-
-export interface SignupResponse {
-  user?: any;
-  message?: string;
-}
+import type { LoginResponse, SignupResponse } from '@/packets';
 
 export async function login(data: any, signal?: AbortSignal): Promise<LoginResponse> {
   return apiClient('/login', {

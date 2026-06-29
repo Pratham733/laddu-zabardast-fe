@@ -1,10 +1,5 @@
-// src/routes/cart.ts
-
 import { apiClient } from './apiClient';
-
-export interface CartResponse {
-  items: any[];
-}
+import type { CartResponse } from '@/packets';
 
 export async function getCart(userId: string, token: string): Promise<CartResponse> {
   return apiClient(`/cart/${userId}`, {

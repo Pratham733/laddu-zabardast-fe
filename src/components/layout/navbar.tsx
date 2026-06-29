@@ -20,12 +20,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCart } from "@/context/cart-context";
-import { useAuth } from "@/context/auth-context";
+import { useCart, useAuth, toast } from "@/hooks";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useRef } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { toast } from "@/hooks/use-toast";
 import {
   Sheet,
   SheetContent,
@@ -44,7 +42,7 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover"; // Import Popover components
 import { sampleProducts } from "@/data/products"; // Import sample products for suggestions
-import type { Product } from "@/types/product";
+import type { Product } from "@/models";
 import { cn } from "@/lib/utils"; // Import cn utility
 import { CoolMode } from "@/components/animations/CoolMode";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";

@@ -11,11 +11,11 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import type { Product } from "@/types/product";
-import { useAuth } from "./auth-context";
+import type { Product } from "@/models";
 import { usePathname } from "next/navigation";
 
 import { getWishlist, updateWishlist } from "@/routes";
+import { useAuth } from "@/hooks/use-auth";
 
 interface WishlistContextProps {
   wishlist: Product[];
@@ -24,7 +24,7 @@ interface WishlistContextProps {
   isInitialised: boolean;
 }
 
-const WishlistContext = createContext<WishlistContextProps | undefined>(
+export const WishlistContext = createContext<WishlistContextProps | undefined>(
   undefined,
 );
 
@@ -86,10 +86,9 @@ export const WishlistProvider = ({
       return;
     }
 
-    updateWishlist(user.userId, wishlist, token)
-      .catch((err) => {
-        console.error("[WishlistContext] PUT fetch error:", err);
-      });
+    updateWishlist(user.userId, wishlist, token).catch((err) => {
+      console.error("[WishlistContext] PUT fetch error:", err);
+    });
   }, [wishlist, user?.userId, token, isInitialised]);
 
   const addToWishlist = useCallback((product: Product) => {
@@ -134,12 +133,4 @@ export const WishlistProvider = ({
       {children}
     </WishlistContext.Provider>
   );
-};
-
-export const useWishlist = () => {
-  const context = useContext(WishlistContext);
-  if (context === undefined) {
-    throw new Error("useWishlist must be used within a WishlistProvider");
-  }
-  return context;
 };

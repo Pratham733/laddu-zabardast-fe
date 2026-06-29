@@ -1,10 +1,5 @@
-// src/routes/wishlist.ts
-
 import { apiClient } from './apiClient';
-
-export interface WishlistResponse {
-  wishlist: any[];
-}
+import type { WishlistResponse } from '@/packets';
 
 export async function getWishlist(userId: string, token: string): Promise<WishlistResponse> {
   return apiClient(`/wishlist/${userId}`, {

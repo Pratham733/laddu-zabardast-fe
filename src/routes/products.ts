@@ -1,14 +1,9 @@
-// src/routes/products.ts
-
 import { apiClient } from './apiClient';
-import type { Product } from '@/types/product';
-
-export interface ProductsResponse {
-  products: Product[];
-}
+import type { Product } from '@/models';
+import type { ProductsResponse } from '@/packets';
 
 export async function getProducts(): Promise<ProductsResponse> {
-  return apiClient('/add-product', {
+  return apiClient('/products', {
     method: 'GET',
   });
 }

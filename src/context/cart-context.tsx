@@ -1,13 +1,15 @@
 "use client";
 
-import type { Product } from '@/types/product';
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useRef } from 'react';
-import { useAuth } from './auth-context';
-
-export interface CartItem extends Product {
-  id: string; // force id to be required
-  quantity: number;
-}
+import type { Product, CartItem } from "@/models";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 
 interface CartContextType {
   cart: CartItem[];
@@ -18,39 +20,48 @@ interface CartContextType {
   getCartTotal: () => number;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+export const CartContext = createContext<CartContextType | undefined>(
+  undefined,
+);
 
-const CART_STORAGE_KEY = 'ladooExpressCart';
+const CART_STORAGE_KEY = "ladooExpressCart";
 
-import { getCart, updateCart } from '@/routes';
+import { getCart, updateCart } from "@/routes";
+import { useAuth } from "@/hooks/use-auth";
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user, token } = useAuth();
   const [cart, setCart] = useState<CartItem[]>(() => {
-      // Initialize state from localStorage only on client-side
-      if (typeof window !== 'undefined') {
-          const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-          return savedCart ? JSON.parse(savedCart) : [];
-      }
-      return [];
+    // Initialize state from localStorage only on client-side
+    if (typeof window !== "undefined") {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+      return savedCart ? JSON.parse(savedCart) : [];
+    }
+    return [];
   });
   const [isInitialised, setIsInitialised] = useState(false);
   const prevCartRef = useRef<string>("");
 
   // Helper to sanitize cart items
   function sanitizeCartItems(items: any[]): CartItem[] {
-    return (items || []).map((item) => ({
-      ...item,
-      price: typeof item.price === 'number' && !isNaN(item.price) ? item.price : 0,
-      quantity: typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1,
-      id: item._id?.toString() || item.id || item.productId || '',
-      _id: item._id?.toString() || item.id || item.productId || '',
-    })).filter(item => item.id);
+    return (items || [])
+      .map((item) => ({
+        ...item,
+        price:
+          typeof item.price === "number" && !isNaN(item.price) ? item.price : 0,
+        quantity:
+          typeof item.quantity === "number" && item.quantity > 0
+            ? item.quantity
+            : 1,
+        id: item._id?.toString() || item.id || item.productId || "",
+        _id: item._id?.toString() || item.id || item.productId || "",
+      }))
+      .filter((item) => item.id);
   }
 
   // Load cart from backend or localStorage on mount or user change
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     if (!user || !token) {
       // Not logged in: load from localStorage
       const saved = localStorage.getItem(CART_STORAGE_KEY);
@@ -60,7 +71,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
     // Logged in: fetch from backend
     getCart(user.userId, token)
-      .then(data => {
+      .then((data) => {
         // Only set cart if backend returns items
         if (Array.isArray(data.items)) {
           setCart(sanitizeCartItems(data.items));
@@ -76,7 +87,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Save cart to localStorage (for guests) or backend (for logged-in users)
   useEffect(() => {
     if (!isInitialised) return;
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const cartString = JSON.stringify(cart);
     if (prevCartRef.current === cartString) return;
     prevCartRef.current = cartString;
@@ -85,9 +96,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } else {
       // Save to backend
       // Only send productId and quantity to backend
-      const itemsToSave = cart.map(item => ({
+      const itemsToSave = cart.map((item) => ({
         productId: item._id?.toString() || item.id,
-        quantity: item.quantity
+        quantity: item.quantity,
       }));
       updateCart(user.userId, itemsToSave, token);
     }
@@ -105,11 +116,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const existingItem = prevCart.find((item) => item._id === productId);
       if (existingItem) {
         return prevCart.map((item) =>
-          item._id === productId ? { ...item, quantity: item.quantity + 1 } : item
+          item._id === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
         );
       } else {
         // When adding new item, ensure it has a valid 'id' and '_id'
-        return [...prevCart, { ...product, id: productId, _id: productId, quantity: 1 }];
+        return [
+          ...prevCart,
+          { ...product, id: productId, _id: productId, quantity: 1 },
+        ];
       }
     });
   };
@@ -125,8 +141,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
     setCart((prevCart) =>
       prevCart.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
-      )
+        item.id === productId ? { ...item, quantity } : item,
+      ),
     );
   };
 
@@ -139,28 +155,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Memoize context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    cart,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    getCartTotal,
-    isInitialised,
-  }), [cart, isInitialised]);
+  const contextValue = useMemo(
+    () => ({
+      cart,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getCartTotal,
+      isInitialised,
+    }),
+    [cart, isInitialised],
+  );
 
   return (
-    <CartContext.Provider value={contextValue}>
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>
   );
 };
-
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
-};
-

@@ -11,8 +11,9 @@ import React, {
   ReactNode,
 } from "react";
 import { Loader2 } from "lucide-react";
-import type { AppUser } from "@/types/product"; // Import AppUser type from types/product.ts
-import { getUser, logout as apiLogout } from "@/routes";
+import type { AppUser } from "@/models"; // Import AppUser type from models
+import { logout as apiLogout } from "@/routes";
+import { getUser } from "@/queries";
 
 interface AuthContextType {
   // Ensure this interface is aligned with AppUser type, including isAdmin
@@ -28,7 +29,7 @@ interface AuthContextType {
 
 const adminEmail = "spratham388@gmail.com"; // IMPORTANT: Replace with YOUR actual admin email address
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   setToken: () => { },
@@ -68,6 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     localStorage.removeItem("authToken"); // Clean up legacy token if any
     console.log("[AuthContext] User logged out via logout function.");
+    window.location.href = "/login";
   };
 
   const hasInitialized = useRef(false);
@@ -132,12 +134,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-

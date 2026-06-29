@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import { useState, useMemo, useCallback } from 'react';
-import type { Product } from '@/types/product';
+import type { Product } from '@/models';
 import {
   Card,
   CardContent,
@@ -14,9 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart, HeartIcon } from 'lucide-react';
-import { useCart } from '@/context/cart-context';
-import { useWishlist } from '@/context/wishlist-context';
-import { toast } from '@/hooks/use-toast';
+import { useCart, useWishlist, toast } from '@/hooks';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";

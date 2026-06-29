@@ -1,10 +1,5 @@
-// src/routes/orders.ts
-
 import { apiClient } from './apiClient';
-
-export interface GetOrdersResponse {
-  orders: any[];
-}
+import type { GetOrdersResponse } from '@/packets';
 
 export async function getOrders(email?: string): Promise<GetOrdersResponse> {
   const params: Record<string, string> = {};

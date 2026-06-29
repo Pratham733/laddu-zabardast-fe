@@ -1,6 +1,6 @@
 "use client";
 
-import type { Product } from '@/types/product';
+import type { Product } from '@/models';
 import { ProductCard } from '@/components/product-card';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
